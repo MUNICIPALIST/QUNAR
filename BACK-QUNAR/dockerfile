@@ -1,0 +1,32 @@
+# Use official Golang image as the base
+FROM golang:1.21 AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the Go module files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod tidy
+
+# Copy the source code
+COPY . .
+
+# Build the Go application
+RUN go build -o server
+
+# Use a minimal base image for the final container
+FROM debian:bookworm-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /app/server .
+
+# Expose the port that the app runs on
+EXPOSE 9090
+
+# Run the application
+CMD ["./server"]
